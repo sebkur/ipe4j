@@ -1,0 +1,4 @@
+include 'core', 'jaxb', 'cli'
+project(':core').name = 'ipe4j-core'
+project(':jaxb').name = 'ipe4j-jaxb'
+project(':cli').name = 'ipe4j-cli'
