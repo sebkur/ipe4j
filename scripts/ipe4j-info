@@ -1,0 +1,7 @@
+#!/bin/bash
+
+DIR=$(dirname $0)
+CMD="$DIR/ipe4j.sh"
+CLASS="de.topobyte.ipe.cli.Info"
+
+exec "$CMD" "$CLASS" "$@"
