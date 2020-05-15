@@ -1,6 +1,6 @@
 # Ipe4j
 
-Ipe4j is an effort to build a libraries and tools for working with
+Ipe4j is an effort to build libraries and tools for working with
 [Ipe](http://ipe.otfried.org/) files using Java.
 
 ## Resources
