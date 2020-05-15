@@ -7,4 +7,6 @@ dependencies {
     compile project(':ipe4j-core')
 
     compile 'javax.xml.bind:jaxb-api:2.3.1'
+    compile 'com.sun.xml.bind:jaxb-impl:2.3.1'
+    compile 'com.sun.istack:istack-commons-runtime:3.0.11'
 }
