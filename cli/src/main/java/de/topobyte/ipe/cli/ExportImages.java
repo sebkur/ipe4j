@@ -1,5 +1,7 @@
 package de.topobyte.ipe.cli;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -9,7 +11,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.List;
+import java.util.zip.InflaterInputStream;
 
+import javax.imageio.ImageIO;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -23,7 +27,10 @@ import org.apache.commons.cli.Options;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
 
+import de.topobyte.ipe.bitmaps.ImageEncoding;
+import de.topobyte.ipe.jaxb.bitmaps.Bitmaps;
 import de.topobyte.ipe.jaxb.model.Bitmap;
 import de.topobyte.ipe.jaxb.model.Ipe;
 import de.topobyte.utilities.apache.commons.cli.OptionHelper;
@@ -88,7 +95,11 @@ public class ExportImages
 					"bitmap %d width: %s, height: %s, encoding: %s", i,
 					bitmap.getWidth(), bitmap.getHeight(),
 					bitmap.getEncoding()));
-			Path output = dir.resolve(String.format("%d.png", i + 1));
+
+			ImageEncoding imageEncoding = Bitmaps.getImageEncoding(bitmap);
+			String extension = Bitmaps.getExtension(imageEncoding);
+
+			Path output = dir.resolve(String.format("%d.%s", i + 1, extension));
 			System.out.println(String.format("Storing as: %s", output));
 
 			exportBitmap(bitmap, output);
@@ -98,11 +109,60 @@ public class ExportImages
 	private static void exportBitmap(Bitmap bitmap, Path output)
 			throws IOException
 	{
+		System.out.println("encoding: " + bitmap.getEncoding());
+		System.out.println("filter: " + bitmap.getFilter());
+		System.out.println("color space: " + bitmap.getColorSpace());
+		System.out
+				.println("bits per component: " + bitmap.getBitsPerComponent());
+		int width = Integer.parseInt(bitmap.getWidth());
+		int height = Integer.parseInt(bitmap.getHeight());
+
 		String value = bitmap.getvalue();
 		String trimmed = value.trim();
 		byte[] base64 = trimmed.getBytes(StandardCharsets.UTF_8);
 		byte[] data = Base64.getMimeDecoder().decode(base64);
 		System.out.println(String.format("data length: %d", data.length));
+
+		ImageEncoding imageEncoding = Bitmaps.getImageEncoding(bitmap);
+		switch (imageEncoding) {
+		case FLATE_DECODE: {
+			ByteArrayInputStream bais = new ByteArrayInputStream(data);
+			InflaterInputStream iis = new InflaterInputStream(bais);
+			byte[] decoded = ByteStreams.toByteArray(iis);
+			System.out.println(
+					String.format("decoded length: %d", decoded.length));
+			export(output, decoded, width, height);
+			break;
+		}
+		case DCT_DECODE: {
+			exportRaw(output, data);
+			break;
+		}
+		}
+	}
+
+	private static void export(Path output, byte[] data, int width, int height)
+			throws IOException
+	{
+		BufferedImage image = new BufferedImage(width, height,
+				BufferedImage.TYPE_INT_RGB);
+
+		ByteArrayInputStream bais = new ByteArrayInputStream(data);
+		for (int y = 0; y < height; y++) {
+			for (int x = 0; x < width; x++) {
+				int r = bais.read();
+				int g = bais.read();
+				int b = bais.read();
+				int rgb = (r << 16) | (g << 8) | b;
+				image.setRGB(x, y, rgb);
+			}
+		}
+
+		ImageIO.write(image, "png", output.toFile());
+	}
+
+	private static void exportRaw(Path output, byte[] data) throws IOException
+	{
 		OutputStream os = Files.newOutputStream(output);
 		os.write(data);
 		os.close();
