@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -14,23 +15,50 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
+
 import de.topobyte.ipe.jaxb.model.Ipe;
+import de.topobyte.utilities.apache.commons.cli.OptionHelper;
+import de.topobyte.utilities.apache.commons.cli.commands.args.CommonsCliArguments;
+import de.topobyte.utilities.apache.commons.cli.commands.options.CommonsCliExeOptions;
+import de.topobyte.utilities.apache.commons.cli.commands.options.ExeOptions;
+import de.topobyte.utilities.apache.commons.cli.commands.options.ExeOptionsFactory;
 
 public class Info
 {
 
-	public static void main(String[] args)
+	private static final String OPTION_VIEWS = "views";
+
+	public static ExeOptionsFactory OPTIONS_FACTORY = new ExeOptionsFactory() {
+
+		@Override
+		public ExeOptions createOptions()
+		{
+			Options options = new Options();
+			OptionHelper.addL(options, OPTION_VIEWS, false, false,
+					"Display information about views");
+			return new CommonsCliExeOptions(options, "[options] <file>");
+		}
+
+	};
+
+	public static void main(String exename, CommonsCliArguments arguments)
 			throws JAXBException, XMLStreamException, IOException
 	{
-		if (args.length != 1) {
-			System.out.println("usage: info <file>");
+		CommandLine line = arguments.getLine();
+		List<String> args = line.getArgList();
+
+		if (args.size() < 1) {
+			System.out.println("Please specify a filename");
+			arguments.getOptions().usage(exename);
 			System.exit(1);
 		}
 
 		JAXBContext jaxbContext = JAXBContext.newInstance(Ipe.class);
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-		Path file = Paths.get(args[0]);
+		Path file = Paths.get(args.get(0));
 		InputStream is = Files.newInputStream(file);
 
 		XMLInputFactory xif = XMLInputFactory.newFactory();
