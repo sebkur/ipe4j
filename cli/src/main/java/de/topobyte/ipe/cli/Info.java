@@ -18,6 +18,10 @@ import javax.xml.transform.stream.StreamSource;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import de.topobyte.ipe.jaxb.model.Bitmap;
 import de.topobyte.ipe.jaxb.model.Ipe;
 import de.topobyte.ipe.jaxb.model.Page;
 import de.topobyte.utilities.apache.commons.cli.OptionHelper;
@@ -30,6 +34,7 @@ public class Info
 {
 
 	private static final String OPTION_VIEWS = "views";
+	private static final String OPTION_BITMAPS = "bitmaps";
 
 	public static ExeOptionsFactory OPTIONS_FACTORY = new ExeOptionsFactory() {
 
@@ -39,6 +44,8 @@ public class Info
 			Options options = new Options();
 			OptionHelper.addL(options, OPTION_VIEWS, false, false,
 					"Display information about views");
+			OptionHelper.addL(options, OPTION_BITMAPS, false, false,
+					"Display information about bitmaps");
 			return new CommonsCliExeOptions(options, "[options] <file>");
 		}
 
@@ -57,6 +64,7 @@ public class Info
 		}
 
 		boolean showViewDetails = line.hasOption(OPTION_VIEWS);
+		boolean showBitmapDetails = line.hasOption(OPTION_BITMAPS);
 
 		JAXBContext jaxbContext = JAXBContext.newInstance(Ipe.class);
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -79,6 +87,19 @@ public class Info
 				Page page = ipe.getPage().get(i);
 				System.out.println(String.format("page %d: %d views", i + 1,
 						page.getView().size()));
+			}
+		}
+
+		if (showBitmapDetails) {
+			List<Object> bitmapOrIpestyle = ipe.getBitmapOrIpestyle();
+			List<Bitmap> bitmaps = Lists.newArrayList(
+					Iterables.filter(bitmapOrIpestyle, Bitmap.class));
+			for (int i = 0; i < bitmaps.size(); i++) {
+				Bitmap bitmap = bitmaps.get(i);
+				System.out.println(String.format(
+						"bitmap %d width: %s, height: %s, encoding: %s", i,
+						bitmap.getWidth(), bitmap.getHeight(),
+						bitmap.getEncoding()));
 			}
 		}
 	}
