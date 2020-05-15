@@ -19,6 +19,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
 import de.topobyte.ipe.jaxb.model.Ipe;
+import de.topobyte.ipe.jaxb.model.Page;
 import de.topobyte.utilities.apache.commons.cli.OptionHelper;
 import de.topobyte.utilities.apache.commons.cli.commands.args.CommonsCliArguments;
 import de.topobyte.utilities.apache.commons.cli.commands.options.CommonsCliExeOptions;
@@ -55,6 +56,8 @@ public class Info
 			System.exit(1);
 		}
 
+		boolean showViewDetails = line.hasOption(OPTION_VIEWS);
+
 		JAXBContext jaxbContext = JAXBContext.newInstance(Ipe.class);
 		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
@@ -70,6 +73,14 @@ public class Info
 		System.out.println("version: " + ipe.getVersion());
 
 		System.out.println("#pages: " + ipe.getPage().size());
+
+		if (showViewDetails) {
+			for (int i = 0; i < ipe.getPage().size(); i++) {
+				Page page = ipe.getPage().get(i);
+				System.out.println(String.format("page %d: %d views", i + 1,
+						page.getView().size()));
+			}
+		}
 	}
 
 }
