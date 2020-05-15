@@ -21,7 +21,8 @@ public class IpeCLI
 		{
 			DelegateExeOptions options = new DelegateExeOptions();
 			options.addCommand("info", Info.OPTIONS_FACTORY, Info.class);
-
+			options.addCommand("export-images", ExportImages.OPTIONS_FACTORY,
+					ExportImages.class);
 			return options;
 		}
 
